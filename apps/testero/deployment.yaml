@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: testero
+    app.kubernetes.io/component: testero
+    app.kubernetes.io/instance: testero
+  name: testero
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      deployment: testero
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        deployment: testero
+    spec:
+      containers:
+      - image: image-registry.openshift-image-registry.svc:5000/resourcet1/testero:latest
+        imagePullPolicy: IfNotPresent
+        name: testero
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30

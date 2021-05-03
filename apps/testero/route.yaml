@@ -1,0 +1,15 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  labels:
+    app: testero
+    app.kubernetes.io/component: testero
+    app.kubernetes.io/instance: testero
+  name: testero
+spec:
+  port:
+    targetPort: 8080-tcp
+  to:
+    kind: Service
+    name: testero
+    weight: 100
