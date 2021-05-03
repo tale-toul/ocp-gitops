@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: resourceT1
+spec:
+  finalizers:
+  - kubernetes
