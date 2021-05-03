@@ -2,6 +2,7 @@
 kind: LimitRange
 metadata:
   name: container-limit-range
+  namespace: resourcet1
 spec:
   limits:
     - default:
