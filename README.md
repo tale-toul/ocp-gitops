@@ -39,3 +39,7 @@ zAx8oVwakQsq5JitMFIp53ecGd14rSlv
 ## Openshift cluster configuration
 
 The namespaces directory contains additional directories for the creation of projects (namespaces) in the Openshift cluster.  Each directory contains a yaml definition for the namespace object, and a resources subdirectory for the resources to be created in it.  The resources subdirectory exists to make sure that ArgoCD creates the namespace before attempting to create its resources. 
+
+## ArgoCD component manifests
+
+The directory CRDs contains yaml definitions for the _applications_ created inside ArgoCD.

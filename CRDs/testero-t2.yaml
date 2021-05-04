@@ -1,0 +1,19 @@
+- apiVersion: argoproj.io/v1alpha1
+  kind: Application
+  metadata:
+    name: testero-t2
+    namespace: openshift-gitops
+  spec:
+    destination:
+      namespace: resourcet2
+      server: https://kubernetes.default.svc
+    project: default
+    source:
+      directory:
+        recurse: true
+      path: apps/testero
+      repoURL: https://github.com/tale-toul/ocp-gitops
+      targetRevision: HEAD
+    syncPolicy:
+      syncOptions:
+      - CreateNamespace=true
