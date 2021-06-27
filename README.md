@@ -1,6 +1,6 @@
-# GIT OPS CONFIGURATION FOR OPENSHIFT 4 CLUSTERS
+# GITOPS CONFIGURATION FOR OPENSHIFT 4 CLUSTERS
 
-## Installing Red Hat Openshift GitOps
+## Installing the Red Hat Openshift GitOps Operator
 
 In the spirit of gitops best practices, this [installation instructions](https://docs.openshift.com/container-platform/4.7/operators/user/olm-installing-operators-in-namespace.html#olm-installing-operator-from-operatorhub-using-cli_olm-installing-operators-in-namespace) use the CLI instead of the web console.
 
@@ -63,23 +63,54 @@ $ sudo install -m 755 kubeseal /usr/local/bin/kubeseal
 To install the controller there are different options, in this case the __Sealed Secrets Operator__ from the operator hub will be used.  All components are installed by default in the namespace called sealed-secrets, if the namespace does not exist it is created during the installation process.  
 Go to the Operator Hub section in the Openshift cluster and look for _secrets_ in the search box, select __Sealed Secrets Operator_ (Helm)__ and click Install.  When the operator is installed go to SealedSecretController and click on __Create SealedSecretController__, the name given to the new controller must be all in small caps.
 
+To install the operator manually in the namespace __sealed-secrets__:
+* Create the sealed-secrets namespace:
+```
+$ oc new-project sealed-secrets
+```
+* Create the operator group, the yaml definition can be found at ocp-gitops/Operators/SealedSecrets/operatorgroup.yaml 
+```
+$ oc apply -f operatorgroup.yaml 
+operatorgroup.operators.coreos.com/sealed-secrets-s8jxr created
+```
+* Create the subscription, the yaml definition can be found at ocp-gitops/Operators/SealedSecrets/subscription.yaml. 
+   
+   The subscription uses the alpha channel, the only one available at the moment, and a automatic update strategy.
+```
+$ oc apply -f subscription.yaml 
+subscription.operators.coreos.com/sealed-secrets-operator-helm created
+```
+* Create the SealedSecretController CR, the yaml definition can be found at ocp-gitops/Operators/SealedSecrets/sealedsecretcontrollerCR.yaml
+```
+$ oc apply -f sealedsecretcontrollerCR.yaml
+```
+The operator, controller and the secret containing the x509 certificate use to encrypt/unencrypt the secrets are created in the sealed-secrets namespace:
+```
+$ oc get pods
+NAME                                                    READY   STATUS    RESTARTS   AGE
+sealed-secrets-operator-helm-76bd999f7f-84vvw           1/1     Running   0          13m
+sealedsecretcontroller-sealed-secrets-8b848ccc7-4b996   1/1     Running   0          3m30s
+$ oc get secrets|grep tls
+sealed-secrets-key7kvdp                                 kubernetes.io/tls                     2      3m30s
+```
+
 ### Certificate management
 
-When the SealedSecretController is created, it will generate a new TLS certificate that is used to encrypt/decrypt secrets (sealing key).  The certificate is stored itself in a secret of type __kubernetes.io/tls__ in the same namespace and will be called something like __sealed-secrets-keyxff2g__.  As a normal secret, the certificate is not secret information.
+When the SealedSecretController is created, it will generate a new TLS certificate that is used to encrypt/decrypt secrets (sealing key).  The certificate is stored in a secret of type __kubernetes.io/tls__ in the same namespace and will be called something like __sealed-secrets-keyxff2g__.  As with any other normal secret, the certificate is not encrypted.
 
 The sealing key is automatically renewed every 30 days. Which means a new sealing key is created and appended to the set of active sealing keys the controller can use to unseal Sealed Secret resources.  The latest sealing key is used to encrypt new secrets, the old sealing keys are kept so that secrets encrypted with them can still be used.
 
 Since every SealedSecretController creates its own sealing key, this means that a secret encrypted in one cluster cannot be used/decrypted on a different cluster.  This is a security meassure to avoid revealing a secret by simply deploying it on a different cluster.  However this makes it difficult to have generic configuration definitions in git that can be applyed to any new installed cluster.  
 
-To avoid this limitation it is possible to create additional decrypting certificates to the SealedSecretController. So the certificate used to encrypt a secret in one cluster can be used to decrypt it in another:
+To avoid this limitation it is possible to inject additional decrypting certificates to the SealedSecretController. So the certificate used to encrypt a secret in one cluster can be used to decrypt it in another:
 
 * Extract the certificate used to encrypt the secret:
 ```
-$ oc get secret sealed-secrets-keyxff2g -n sealed-secrets -o yaml > master.key
+$ oc get secret sealed-secrets-keyxff2g -n sealed-secrets -o yaml > sealedkey-secret.yaml
 ```
 * Import the secret in the new cluster, in the namespace where the SealedSecretController is running.  Make sure that the secret contains the label __sealedsecrets.bitnami.com/sealed-secrets-key=active__:
 ```
-$ oc create -f master.key 
+$ oc create -f sealedkey-secret.yaml
 ```
 * Restart the SealedSecretController pod
 ```
@@ -99,7 +130,7 @@ Let's see how to encrypt a secret following an example.
 * Create a secret definition 
 
 ```
-$ oc create secret generic petruxio --from-literal carta=pacio --from-literal nigro=mante --dry-run=client -o yaml >secret1.yaml
+$ oc create secret generic petruxio --from-literal carta=pacio --from-literal duck=cover --dry-run=client -o yaml >secret1.yaml
 ```
 Sealed secrets are by default bound to a particular namespace and the sealing key in a cluster to avoid the secret being deployed and revealed into another cluster.
 
@@ -120,7 +151,7 @@ data:
 * Encrypt the secret with kubeseal.  The name of the namespace where the SealedSecretController is running and the name of the service it provides need to be specified in the command line since the operator installation does not use the default ones:
 
 ```
-$ kubeseal -o yaml --controller-name sealedsecretscontroller-sealed-secrets --controller-namespace sealed-secrets  < secret1.yaml >secret1-sealed.yaml
+$ kubeseal -o yaml --controller-name sealedsecretcontroller-sealed-secrets --controller-namespace sealed-secrets  < secret1.yaml >secret1-sealed.yaml
 ```
 The resulting yaml file looks like:
 

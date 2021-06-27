@@ -1,0 +1,46 @@
+---
+- name: Configure OCP 4 cluster
+  hosts: 127.0.0.1
+  connection: local
+  module_defaults:
+    group/k8s:
+      host: "{{ api_entrypoint }}"
+      ca_cert: "{{ api_ca_cert }}"
+  tasks:
+    - name: Load user credentials for OCP
+      include_vars: 
+        file: user_credentials.vault
+    - name: Log into OCP to obtain access token
+      k8s_auth:
+        username: "{{ ocp_user }}"
+        password: "{{ ocp_pass }}"
+      register: _auth_result
+#    - name: Create namespace 
+#      k8s:
+#        api_key: "{{ _auth_result.k8s_auth.api_key }}"
+#        api_version: v1
+#        kind: Namespace
+#        name: "sealed-secrets"
+#        state: "present"
+    - name: Install Gitops operator
+      k8s:
+        api_key: "{{ _auth_result.k8s_auth.api_key }}"
+        src: ../Operators/RedHatOpenshiftGitops/subscription.yaml
+        state: "present"
+#    - name: Waiting for Gitops operator to succeed 
+#      k8s_info:
+#        api_key: "{{ _auth_result.k8s_auth.api_key }}"
+#        api_version: "operators.coreos.com/v1alpha1"
+#        kind: "ClusterServiceVersion"
+#        name: 
+#        namespace:
+#      register: _
+#      until:
+
+        
+    - name: Log out to revoke access token
+      k8s_auth:
+        state: absent
+        api_key: "{{ _auth_result.k8s_auth.api_key }}"
+      when: _auth_result.k8s_auth.api_key is defined
+...
