@@ -27,9 +27,6 @@
         api_key: "{{ _auth_result.k8s_auth.api_key }}"
         src: ../Operators/RedHatOpenshiftGitops/subscription.yaml
         state: "present"
-#    - name: Pause for a few seconds
-#      pause:
-#        seconds: 6
     - name: Get ClusterServiceVersion for Gitops operator
       k8s_info:
         api_key: "{{ _auth_result.k8s_auth.api_key }}"
@@ -45,8 +42,6 @@
     - name: Define Cluster Service Version being installed for Gitops Operator
       set_fact:
         gitopsCSV: "{{ _subscription_gitops.resources[0].status.currentCSV }}"
-    - debug:
-        msg: "CSV for Gitops operator: {{ gitopsCSV }}"
     - name: Waiting for Gitops operator installation to succeed
       k8s_info:
        api_key: "{{ _auth_result.k8s_auth.api_key }}"
@@ -56,20 +51,15 @@
        namespace: "openshift-operators"
       register: _installed_gitops
       until:
+        - _installed_gitops.resources[0].status.conditions[-1].phase is defined
         - _installed_gitops.resources[0].status.conditions[-1].phase == "Succeeded"
       retries: 14
       delay: 4
-      
-#    - name: Waiting for Gitops operator to succeed 
-#      k8s_info:
-#        api_key: "{{ _auth_result.k8s_auth.api_key }}"
-#        api_version: "operators.coreos.com/v1alpha1"
-#        kind: "ClusterServiceVersion"
-#        name: 
-#        namespace:
-#      register: _
-#      until:
-
+    - name: Assign cluster admin role to service account openshift-gitops-argocd-application-controller in openshift-gitops namespace
+      k8s:
+       api_key: "{{ _auth_result.k8s_auth.api_key }}"
+       src: ../Operators/RedHatOpenshiftGitops/clusterrolebinding.yaml
+       state: "present"
         
     - name: Log out to revoke access token
       k8s_auth:
