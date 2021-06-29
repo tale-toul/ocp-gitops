@@ -15,13 +15,6 @@
         username: "{{ ocp_user }}"
         password: "{{ ocp_pass }}"
       register: _auth_result
-#    - name: Create namespace 
-#      k8s:
-#        api_key: "{{ _auth_result.k8s_auth.api_key }}"
-#        api_version: v1
-#        kind: Namespace
-#        name: "sealed-secrets"
-#        state: "present"
     - name: Install Gitops operator
       k8s:
         api_key: "{{ _auth_result.k8s_auth.api_key }}"
@@ -53,8 +46,8 @@
       until:
         - _installed_gitops.resources[0].status.conditions[-1].phase is defined
         - _installed_gitops.resources[0].status.conditions[-1].phase == "Succeeded"
-      retries: 14
-      delay: 4
+      retries: 24
+      delay: 8
     - name: Assign cluster admin role to service account openshift-gitops-argocd-application-controller in openshift-gitops namespace
       k8s:
        api_key: "{{ _auth_result.k8s_auth.api_key }}"

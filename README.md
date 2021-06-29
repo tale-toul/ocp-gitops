@@ -44,6 +44,41 @@ The namespaces directory contains additional directories for the creation of pro
 
 The directory CRDs contains yaml definitions for the _applications_ created inside ArgoCD.
 
+## Ansible automation
+
+An ansible playbook exists in the Ansible directory mostly as a reference to see how to install the components required to have a fully functional Gitops service. 
+
+The playbook uses the k8s modules (k8s; k8s_auth; k8s_info), these modules require the __python2-openshift__ package and ansible 2.9 to be installed in the system running the playbook.
+
+The following ansible variables need to be defined in order to successfully run the playbook:
+
+* The playbook needs to know the API entrypoint of the Openshift cluter.  Assing the value to the ansible variable **api_entrypoint**.  The value can be obtained running the following command from an already logged in session in the OCP cluster: 
+```
+$ oc whoami --show-server
+https://master.ocpext.example.com:443
+```
+* In order to stablish secure connections with the API, the k8s modules need to have the CA certificates used by the cluster.  Obtain the CA bundle running the following command:
+```
+$ oc rsh -n openshift-authentication <oauth-openshift-pod> cat /run/secrets/kubernetes.io/serviceaccount/ca.crt > ingress-ca.crt
+```
+   Then define the variable **api_ca_cert** with the absolute or relative path to the file.
+
+* The playbook requires the credentials of an admin user because it makes privileges changes to the cluster like installing operators.  The credentials are expected to be found in a file called **user_credentials.vault** in the same directory where the playbook is located.  The format of the file is:
+```
+ocp_user: kubeadmin
+ocp_pass: <password>
+```
+This file should be encrypted with ansible-vault:
+```
+$ ansible-vault encrypt user_credentials.vault
+```
+   The vault password must be passed to the playbook.
+An example command to run the playbook is:
+```
+$ ansible-playbook  add-config.yaml -e api_entrypoint="https://api.magne.jjerezro.emeatam.support:6443" -e api_ca_cert=ingress-ca.crt --vault-id vault-id
+```
+
+
 ## Sealed Secrets
 
 This section explains how to use [Bitnami's sealed secrets](https://github.com/bitnami-labs/sealed-secrets) to manage kubernetes secrets in a public git repository.  
@@ -164,8 +199,8 @@ metadata:
   namespace: garrido
 spec:
   encryptedData:
-    carta: AgCCT9ThqudYoGn7cRq6HXldM6/6q/SMRRCX1+iqofktaqRBKc66Ok7snlmjUNZ1ft0zVmOLsYei7qUlkISnqlJcoCN6YCPkKq4QwdTPIp6NoevsYEzdaMFv3CAeXDkiFAxCfWUW9RkWf72lklIBcLvpMBP8jtvdlFwohUq7+svS7T2nEtxOjgffa0NwmT0le7La8qFEfbqWdPTA5wUMZBoGHzGYczLr5cG7+jSH5IvKmE6135owADjafGqMzZa3VeGi/3RzO7bw18Vq8Vh2xrcAXO+MB5x6OhZTesgb5SngcI0/l/ule0bH3q9U9lV91UrasszdWul+cjqiqhlLzdqaLZRfWdri9FzR0D8X3HjtikU989VCULX3lKygmRuPiLSGXkIe65cfbaPR9axrN3vS38BGlPHc8DWM+5I97UeHPu/BXY+kjD6ODXnopoJm3/DvcVe1ps+lFTzhauRTjKLbsz0zmcYngl1kYmCTQwQUptrCDx8JLtrR5+ekA2UyO88t4AtoLgPniiOaAiuO8qtMTnlwUY7xOf+aibQSMiH5c/qtRu726h8F1yXZX/wP4kvfhxIR62BecvH0EMkXZkGPVQWLS6STQBdkI6pb7DffuOFv3kK/fVmndk1anxkMijjU7yUbbUXyGsXq0bJIFBWVatOtnKMk/QDD6uabyQNoy6N0voz+p63ag33rOFVdXVY6a43bHg==
-    nigro: AgAmo7xC32QsaibvF4oPervQ5zpNiCYHliA556oMQ5XUK4jeZpf0FP3rDTCzPHe72NH5agVT9esGwTt4jyoh/vpo8ZZgZww5XgCrb2b/TYREoC9MHtdIH8ShYZ235704flqYq1TWpCrj9kjSVuLC48z77t0XGKu9l1oAsGkq5lKE/WefJ9sbPylsz8ccS0AIPaOAECKmUingE1y5XA7yMeJhnqKdlHysmvXedGnhD6X180Gk/4rJdQZ46Xz24Ebd7zyUkGlnQOxh39A5M9Ob9iXWb2e49rWBq7fMf8hFCNaX+X9j20QPRjP/9QWTCToAcgKuTEHJ62sZIEbNcYHQiDmvrdFs90c7oc6X4qJ2GymW2nGRkzyfoTkrU0Wn5XMRjCzW2A2RX6zsiflsCJZdMDRmdBpyuu8VX3Pz3qIr3UEAxYm/79gDPsBPiPIw6DFu38U7EwBpTt9kkFIN+IUNOCakoNnCQYL+HAh+5xCKS0jMS34WXp2LITSCGnGrQt0y0OjC+1+nGw5USf0+71pN7YP5qrTgKRTOW3bt4LPxITUHU3T7YatATlIOEZSK1NFHY4lxp42q72VKwSQEM1bg/Tt29tIK9zhhSZlyp8JDm6yPzT2iLq9VziidwY1lyL8SZJ7RDzAYzcMkqXip766/EKYuOqFbU1+UP5pNZ00jQ2W1RJ/GwXNrCQ+lyZnYDsvG3nEeqGVK9w==
+    carta: AgCCT9ThqudYoGn7c...==
+    nigro: AgAmo7xC32QsaibvF...==
   template:
     data: null
     metadata:
