@@ -1,2 +1,5 @@
 .*.swp
 *vault-id
+ingress-ca.crt
+user_credentials.vault
+
