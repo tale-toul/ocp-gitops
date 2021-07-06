@@ -1,0 +1,3 @@
+resources:
+- htpasswd-secret-sealed.yaml
+- oauth.yaml
