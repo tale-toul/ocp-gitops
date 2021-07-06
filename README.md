@@ -170,7 +170,7 @@ Let's see how to encrypt a secret following an example.
 ```
 $ oc create secret generic petruxio --from-literal carta=pacio --from-literal duck=cover --dry-run=client -o yaml >secret1.yaml
 ```
-Sealed secrets are by default bound to a particular namespace and the sealing key in a cluster to avoid the secret being deployed and revealed into another cluster.
+Sealed secrets are by default bound to a particular namespace and a sealing key to avoid the secret being deployed and therefore revealed into another namespace or cluster.
 
 If no namespace is specified in the yaml definition the SealedSecretController will assign the current active namespace when the secret is encrypted, to avoid this it is better to explictly specify the namespace:
 
@@ -178,7 +178,6 @@ If no namespace is specified in the yaml definition the SealedSecretController w
 apiVersion: v1
 kind: Secret
 metadata:
-  creationTimestamp: null
   name: petruxio
   namespace: garrido
 data:
