@@ -45,7 +45,7 @@
         - _installed_gitops.resources[0].status.conditions[-1].phase == "Succeeded"
       retries: 24
       delay: 8
-    - name: Assign cluster admin role to service account openshift-gitops-argocd-application-controller in openshift-gitops namespace
+    - name: Assign cluster admin role to service account argocd-cluster-argocd-application-controller in openshift-gitops namespace
       k8s:
        api_key: "{{ _auth_result.k8s_auth.api_key }}"
        src: ../Operators/RedHatOpenshiftGitops/clusterrolebinding.yaml
