@@ -126,6 +126,30 @@
         - _ssc_deployment.resources[0].status.conditions[-1].reason == "InstallSuccessful"
       retries: 24
       delay: 8
+    - name: Import Sealing keys
+      k8s:
+       api_key: "{{ _auth_result.k8s_auth.api_key }}"
+       definition: "{{ lookup('file', item) }}"
+       state: "present"
+      with_fileglob:
+        - "../Operators/SealedSecrets/sealedKeys/*.yaml"
+    - name: Get Sealed Secret Controller pod name
+      k8s_info:
+       api_key: "{{ _auth_result.k8s_auth.api_key }}"
+       kind: Pod
+       namespace: "sealed-secrets"
+       label_selectors:
+        - app.kubernetes.io/instance = sealedsecretcontroller 
+      register: _ssc_pod
+    - name: Delete (restart) Sealed Secret Controller pod
+      k8s:
+       api_key: "{{ _auth_result.k8s_auth.api_key }}"
+       api_version: "v1"
+       kind: Pod
+       namespace: "sealed-secrets"
+       name: "{{ _ssc_pod.resources[0]['metadata']['name'] }}"
+       wait: yes
+       state: absent
     - name: Log out to revoke access token
       k8s_auth:
         state: absent

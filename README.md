@@ -72,7 +72,10 @@ This file should be encrypted with ansible-vault:
 ```
 $ ansible-vault encrypt user_credentials.vault
 ```
-   The vault password must be passed to the playbook.
+    The vault password must be passed to the playbook.
+
+The playbook imports any sealed keys found in the directory __Operators/SealedSecrets/sealedKeys__ all these keys should be encrypted with ansible-vault using the same password used for the credentials file above.
+
 An example command to run the playbook is:
 ```
 $ ansible-playbook  add-config.yaml -e api_entrypoint="https://api.magne.jjerezro.emeatam.support:6443" -e api_ca_cert=ingress-ca.crt --vault-id vault-id
@@ -119,7 +122,7 @@ subscription.operators.coreos.com/sealed-secrets-operator-helm created
 ```
 $ oc apply -f sealedsecretcontrollerCR.yaml
 ```
-The operator, controller and the secret containing the x509 certificate use to encrypt/unencrypt the secrets are created in the sealed-secrets namespace:
+The operator, controller, and secret containing the x509 certificate used to encrypt/unencrypt the secrets are created in the sealed-secrets namespace:
 ```
 $ oc get pods
 NAME                                                    READY   STATUS    RESTARTS   AGE
@@ -131,13 +134,13 @@ sealed-secrets-key7kvdp                                 kubernetes.io/tls       
 
 ### Certificate management
 
-When the SealedSecretController is created, it will generate a new TLS certificate that is used to encrypt/decrypt secrets (sealing key).  The certificate is stored in a secret of type __kubernetes.io/tls__ in the same namespace and will be called something like __sealed-secrets-keyxff2g__.  As with any other normal secret, the certificate is not encrypted.
+When the SealedSecretController is created, it will generate a new TLS certificate (sealing key) that is used to encrypt/decrypt secrets.  The certificate is stored in a secret of type __kubernetes.io/tls__ and will be named like __sealed-secrets-keyxff2g__.  As with any other normal secret, the certificate is not encrypted.
 
-The sealing key is automatically renewed every 30 days. Which means a new sealing key is created and appended to the set of active sealing keys the controller can use to unseal Sealed Secret resources.  The latest sealing key is used to encrypt new secrets, the old sealing keys are kept so that secrets encrypted with them can still be used.
+The sealing key is automatically renewed every 30 days, the latest key is used to encrypt new Sealed Secrets, the older keys are kept so existing Sealed Secrets can still be decrypted.
 
 Since every SealedSecretController creates its own sealing key, this means that a secret encrypted in one cluster cannot be used/decrypted on a different cluster.  This is a security meassure to avoid revealing a secret by simply deploying it on a different cluster.  However this makes it difficult to have generic configuration definitions in git that can be applyed to any new installed cluster.  
 
-To avoid this limitation it is possible to inject additional decrypting certificates to the SealedSecretController. So the certificate used to encrypt a secret in one cluster can be used to decrypt it in another:
+To avoid the above limitation it is possible to inject additional decrypting certificates to the SealedSecretController. So the certificate used to encrypt a secret in one cluster can be used to decrypt it on a different one. Here is how to do it:
 
 * Extract the certificate used to encrypt the secret:
 ```
@@ -149,7 +152,7 @@ $ oc create -f sealedkey-secret.yaml
 ```
 * Restart the SealedSecretController pod
 ```
-$ oc delete pod -l app.kubernetes.io/instance=sealedsecretscontroller
+$ oc delete pod -l app.kubernetes.io/instance=sealedsecretcontroller -n sealed-secrets
 ```
 The new pod logs will show the sealed keys it has picked up:
 ```
