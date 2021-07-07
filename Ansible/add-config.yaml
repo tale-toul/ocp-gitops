@@ -32,15 +32,12 @@
         - _subscription_gitops.resources[0].status.currentCSV is defined
       retries: 14
       delay: 4
-    - name: Define Cluster Service Version being installed for Gitops Operator
-      set_fact:
-        gitopsCSV: "{{ _subscription_gitops.resources[0].status.currentCSV }}"
     - name: Waiting for Gitops operator installation to succeed
       k8s_info:
        api_key: "{{ _auth_result.k8s_auth.api_key }}"
        api_version: operators.coreos.com/v1alpha1
        kind: "ClusterServiceVersion"
-       name: "{{ gitopsCSV }}"
+       name: "{{ _subscription_gitops.resources[0].status.currentCSV }}"
        namespace: "openshift-operators"
       register: _installed_gitops
       until:
@@ -53,7 +50,82 @@
        api_key: "{{ _auth_result.k8s_auth.api_key }}"
        src: ../Operators/RedHatOpenshiftGitops/clusterrolebinding.yaml
        state: "present"
-        
+    - name: Create sealed-secrets namespace
+      k8s:
+       api_key: "{{ _auth_result.k8s_auth.api_key }}"
+       api_version: "v1"
+       kind: "Namespace"
+       name: "sealed-secrets"
+       state: present
+    - name: Wait for sealed-secrets namespace to be ready
+      k8s_info:
+       api_key: "{{ _auth_result.k8s_auth.api_key }}"
+       api_version: "v1"
+       kind: "Namespace"
+       name: "sealed-secrets"
+      register: _namespace_sealed_secrets
+      until:
+        -  _namespace_sealed_secrets.resources[0].status.phase is defined
+        -  _namespace_sealed_secrets.resources[0].status.phase == "Active"
+    - name: Add operator group
+      k8s:
+       api_key: "{{ _auth_result.k8s_auth.api_key }}"
+       src: ../Operators/SealedSecrets/operatorgroup.yaml
+       state: "present"
+    - name: Install Sealed Secrets operator
+      k8s:
+        api_key: "{{ _auth_result.k8s_auth.api_key }}"
+        src: ../Operators/SealedSecrets/subscription.yaml
+        state: "present"
+    - name: Get Cluster Service Version for Sealed Secrets operator
+      k8s_info:
+        api_key: "{{ _auth_result.k8s_auth.api_key }}"
+        api_version: operators.coreos.com/v1alpha1
+        kind: "Subscription"
+        name: "sealed-secrets-operator-helm"
+        namespace: "sealed-secrets"
+      register: _subscription_sealed
+      until:
+        - _subscription_sealed.resources[0].status.currentCSV is defined
+      retries: 14
+      delay: 4
+    - name: Waiting for Sealed Secrets operator installation to succeed
+      k8s_info:
+       api_key: "{{ _auth_result.k8s_auth.api_key }}"
+       api_version: operators.coreos.com/v1alpha1
+       kind: "ClusterServiceVersion"
+       name: "{{ _subscription_sealed.resources[0].status.currentCSV }}"
+       namespace: "sealed-secrets"
+      register: _installed_sealed
+      until:
+        - _installed_sealed.resources[0].status.conditions[-1].phase is defined
+        - _installed_sealed.resources[0].status.conditions[-1].phase == "Succeeded"
+      retries: 24
+      delay: 8
+    - set_fact:
+        SSC_image: "{{ _installed_sealed['resources'][0]['metadata']['annotations']['alm-examples'] | regex_search('repository\":.*?\"(.*?)\",', '\\1', multiline=True ) | first }}"
+    - name: Create Sealed Secret Controller
+      k8s:
+       api_key: "{{ _auth_result.k8s_auth.api_key }}"
+       definition: "{{ lookup('template', '../Operators/SealedSecrets/sealedsecretcontrollerCR.yaml') }}"
+       state: "present"
+    - name: Waiting for Sealed Secret Controller to be ready
+      k8s_info:
+       api_key: "{{ _auth_result.k8s_auth.api_key }}"
+       api_version: bitnami.com/v1alpha1
+       kind: "SealedSecretController"
+       name: "sealedsecretcontroller"
+       namespace: "sealed-secrets"
+      register: _ssc_deployment
+      until:
+        - _ssc_deployment.resources[0].status.conditions[-1].type is defined
+        - _ssc_deployment.resources[0].status.conditions[-1].type == "Deployed"
+        - _ssc_deployment.resources[0].status.conditions[-1].status is defined
+        - _ssc_deployment.resources[0].status.conditions[-1].status == "True"
+        - _ssc_deployment.resources[0].status.conditions[-1].reason is defined
+        - _ssc_deployment.resources[0].status.conditions[-1].reason == "InstallSuccessful"
+      retries: 24
+      delay: 8
     - name: Log out to revoke access token
       k8s_auth:
         state: absent
