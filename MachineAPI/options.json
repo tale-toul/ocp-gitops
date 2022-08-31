@@ -1,0 +1,8 @@
+{
+ "infraID":"burguito-mea4r",
+ "roleType":["infrados","variados","mordidos"],
+ "region":"eu-west-3",
+ "AZ":["eu-west-3a","eu-west-3b","eu-west-3c"],
+ "ami":"ami-0dc82e2517ded15a1",
+ "suffix":"cario"
+}

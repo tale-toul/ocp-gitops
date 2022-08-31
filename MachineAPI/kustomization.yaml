@@ -1,0 +1,13 @@
+resources:
+- machineset-infrados-eu-west-3a.yaml
+- machineset-variados-eu-west-3a.yaml
+- machineset-mordidos-eu-west-3a.yaml
+- machineset-infrados-eu-west-3b.yaml
+- machineset-variados-eu-west-3b.yaml
+- machineset-mordidos-eu-west-3b.yaml
+- machineset-infrados-eu-west-3c.yaml
+- machineset-variados-eu-west-3c.yaml
+- machineset-mordidos-eu-west-3c.yaml
+- machineconfigpool-infrados.yaml
+- machineconfigpool-variados.yaml
+- machineconfigpool-mordidos.yaml

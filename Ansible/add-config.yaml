@@ -2,6 +2,7 @@
 - name: Configure OCP 4 cluster
   hosts: 127.0.0.1
   connection: local
+  gather_facts: False
   module_defaults:
     group/k8s:
       host: "{{ api_entrypoint }}"

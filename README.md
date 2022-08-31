@@ -219,3 +219,50 @@ $ oc create -f secret1-sealed.yaml
 ```
 Now the secret exists in the namespace garrido as a normal kubernetes secret:
 
+## Machinesets and Machineconfigpools
+
+Creating machinesets and machineconfigpools resources via gitopts is a little more challenging than creating other resources, the reason is that the yaml definitions contains values that are obtained from the cluster once it has been installed, so a generic yaml manifest cannot be directly applied to a new cluster.
+
+To create the final manifests for the machinesets an ansible playbook will be used.  This playbook should be able to create valid machineset machineconfigpools definitions for Openshift clusters deployed on AWS using the IPI method, for other infrastructure providers and intallation method the playbook will not generate valid yaml manifests.  
+
+The playbook runs on the localhost so an inventory file is not required.
+
+Two jinja2 template files called __machineset.j2__ and __machineconfigpool.j2__ contain the basic structure of the machineset and machineconfigpool resources, the ansible playbook __definemachineresources.yaml__ is used to generate the final yaml manifests.
+
+### Creating the resources
+
+To create the resources some information needs to be provided to the ansible playbook as variables:
+
+* __infraID__.- Its value must be extracted from the running cluster, the following command returns the correct value:
+   ```
+   $ oc get infrastructure/cluster -o jsonpath='{.status.infrastructureName}{"\n"}'
+   magne-ndp9k
+   ```
+* __roleType__.- Contains a list of the roles that the nodes in the machineset will be assigned.  The values are purely descriptive and don't carry any special meaning for Openshift.  The same value is assigned to both the role and type labels in the machineset definition.
+
+* __region__.- The AWS region where the OCP cluster has been deployed, the following command returns the correct value:
+   ```
+   $ oc get infrastructure/cluster -o jsonpath='{.status.platformStatus.aws.region}{"\n"}'
+   eu-west-3
+   ```
+* __AZ__.- The list of Availability zones in the AWS region where the cluster is deployed.  For every role, a machineset will be created in each availability zone, so for example if two roles are defined and the AWS region contains 3 AZs, a total of 6 machinesets will be created.
+
+* __ami__.- The value of the AWS ami for the OCP version in the particular AWS zone.  The correct value can be obtained from the [documentation](https://docs.openshift.com/container-platform/4.7/installing/installing_aws/installing-aws-user-infra.html#installation-aws-user-infra-rhcos-ami_installing-aws-user-infra), or fron one of the existing machineset created during the cluster installation:
+   ```
+   $ oc get machineset magne-ndp9k-worker-eu-west-3a -o jsonpath='{.spec.template.spec.providerSpec.value.ami.id}{"\n"}' -n openshift-machine-api
+   ami-0dc82e2517ded15a1
+   ```
+* __suffix__.- A string used to differenciate the resources created by the playbook from those already existing in the cluster, and so aviod naming conflicts.
+
+An example json file definition for all the variables follows:
+
+```json
+{
+ "infraID":"burguito-mea4r",
+ "roleType":["infrados","variados","mordidos"],
+ "region":"eu-west-3",
+ "AZ":["eu-west-3a","eu-west-3b","eu-west-3c"],
+ "ami":"ami-0dc82e2517ded15a1",
+ "suffix":"cario"
+}
+```json

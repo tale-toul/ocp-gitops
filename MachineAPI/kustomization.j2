@@ -1,0 +1,7 @@
+resources:
+{% for file in _machinesets.results %}
+- {{ file.path }}
+{% endfor %}
+{% for file in _machineconfigpools.results %}
+- {{ file.path }}
+{% endfor %}

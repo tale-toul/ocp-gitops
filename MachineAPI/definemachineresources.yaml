@@ -1,0 +1,30 @@
+---
+- name: Create machine sets and config resources
+  hosts: 127.0.0.1
+  connection: local
+  vars:
+    create_mcp: true
+  tasks:
+    - name: Create machinesets
+      template: 
+        src: machineset.j2
+        dest: machineset-{{ item.1 }}-{{ item.0 }}.yaml
+        mode: "0644"
+      loop: "{{ AZ|product(roleType)|list }}"
+      register: _machinesets
+#    - debug:
+#        var: _machinesets
+    - name: Create machineconfigpools
+      template:
+        src:  machineconfigpool.j2
+        dest: machineconfigpool-{{ item }}.yaml
+        mode: "0644"
+      loop: "{{ roleType }}"
+      register: _machineconfigpools
+      when: create_mcp
+    - name: Create kustomization.yaml
+      template:
+        src:  kustomization.j2
+        dest: kustomization.yaml
+        mode: "0644"
+...

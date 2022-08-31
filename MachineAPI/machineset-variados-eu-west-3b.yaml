@@ -1,0 +1,61 @@
+apiVersion: machine.openshift.io/v1beta1
+kind: MachineSet
+metadata:
+  labels:
+    machine.openshift.io/cluster-api-cluster: burguito-mea4r
+  name: burguito-mea4r-variados-eu-west-3b-cario 
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      machine.openshift.io/cluster-api-cluster: burguito-mea4r
+      machine.openshift.io/cluster-api-machineset: burguito-mea4r-variados-eu-west-3b-cario 
+  template:
+    metadata:
+      labels:
+        machine.openshift.io/cluster-api-cluster: burguito-mea4r
+        machine.openshift.io/cluster-api-machine-role: variados
+        machine.openshift.io/cluster-api-machine-type: variados
+        machine.openshift.io/cluster-api-machineset:  burguito-mea4r-variados-eu-west-3b-cario 
+    spec:
+      metadata: 
+        labels:
+          node-role.kubernetes.io/variados: "" 
+      providerSpec:
+        value:
+          ami:
+            id: ami-0dc82e2517ded15a1
+          apiVersion: awsproviderconfig.openshift.io/v1beta1
+          blockDevices:
+          - ebs:
+              encrypted: true
+              iops: 0
+              kmsKey:
+                arn: ""
+              volumeSize: 120
+              volumeType: gp2
+          credentialsSecret:
+            name: aws-cloud-credentials
+          deviceIndex: 0
+          iamInstanceProfile:
+            id: burguito-mea4r-worker-profile
+          instanceType: m5.large
+          kind: AWSMachineProviderConfig
+          placement:
+            availabilityZone: eu-west-3b
+            region: eu-west-3
+          securityGroups:
+          - filters:
+            - name: tag:Name
+              values:
+              - burguito-mea4r-worker-sg
+          subnet:
+            filters:
+            - name: tag:Name
+              values:
+              - burguito-mea4r-private-eu-west-3b
+          tags:
+          - name: kubernetes.io/cluster/burguito-mea4r
+            value: owned
+          userDataSecret:
+            name: worker-user-data
