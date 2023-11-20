@@ -10,5 +10,5 @@ spec:
   source:
     path: IdentityProvider/HTPassword
     repoURL: https://github.com/tale-toul/ocp-gitops/
-    targetRevision: "4.7"
+    targetRevision: HEAD
 

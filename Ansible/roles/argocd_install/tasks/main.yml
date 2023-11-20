@@ -1,0 +1,37 @@
+---
+# tasks file for argocd-install
+- name: Create Subscription for Gitops operator
+  k8s:
+    api_key: "{{ token }}"
+    definition: "{{ lookup('file', 'subscription.yaml') }}" 
+    state: "present"
+- name: Get ClusterServiceVersion for Gitops operator
+  k8s_info:
+    api_key: "{{ token }}"
+    api_version: operators.coreos.com/v1alpha1
+    kind: "Subscription"
+    name: "openshift-gitops-operator"
+    namespace: "openshift-operators"
+  register: _subscription_gitops
+  until:
+    - _subscription_gitops.resources[0].status.currentCSV is defined
+  retries: 14
+  delay: 4
+- name: Wait for Gitops operator installation to succeed
+  k8s_info:
+   api_key: "{{ token }}"
+   api_version: operators.coreos.com/v1alpha1
+   kind: "ClusterServiceVersion"
+   name: "{{ _subscription_gitops.resources[0].status.currentCSV }}"
+   namespace: "openshift-operators"
+  register: _installed_gitops
+  until:
+    - _installed_gitops.resources[0].status.conditions[-1].phase is defined
+    - _installed_gitops.resources[0].status.conditions[-1].phase == "Succeeded"
+  retries: 24
+  delay: 8
+- name: Assign cluster admin role to argocd service account
+  k8s:
+   api_key: "{{ token }}"
+   definition: "{{ lookup('file', 'clusterrolebinding.yaml') }}" 
+   state: "present"
