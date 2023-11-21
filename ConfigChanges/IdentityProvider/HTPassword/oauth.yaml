@@ -9,5 +9,5 @@ spec:
     type: HTPasswd
     htpasswd:
        fileData:
-          name: htpasswd-secret
+          name: htpass-secret
 
