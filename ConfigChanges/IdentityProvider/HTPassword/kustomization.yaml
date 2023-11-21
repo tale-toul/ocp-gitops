@@ -1,3 +1,4 @@
 resources:
 - htpass-secret.yaml
 - oauth.yaml
+- post-check-job.yaml
