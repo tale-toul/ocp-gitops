@@ -1,0 +1,7 @@
+---
+# tasks file for htpass_idm
+- name: Add htpass identity provider
+  k8s:
+    api_key: "{{ token }}"
+    definition: "{{ lookup('file', 'App-htpass-idp.yaml') }}" 
+    state: "present"
