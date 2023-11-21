@@ -26,7 +26,7 @@ spec:
                 date
                 echo "...still waiting for Authentication cluster operator to detect the change."
                 sleep $SLEEP
-		if [ $x -eq 3 ]
+                if [ $x -eq 3 ]
                 then
                   date
                   echo "Change NOT detected by the Authentication Operator. This is normal if only the secret was updated"
