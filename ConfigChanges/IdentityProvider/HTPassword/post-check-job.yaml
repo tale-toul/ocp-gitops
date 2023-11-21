@@ -17,16 +17,19 @@ spec:
             - /bin/bash
             - -c
             - |
+              date
               echo "Wait for Authentication cluster operator to detect the change"
-              sleep $SLEEP
               until oc wait co/authentication --for condition=Progressing --timeout 60s
               do
-                echo -n "...still waiting for Authentication cluster operator to detect the change"
+                date
+                echo -n "...still waiting for Authentication cluster operator to detect the change.  "
                 sleep $SLEEP
               done
+              date
               echo "Change detected by authentication cluster operator"
               echo "Wait for Authentication deployment to complete"
               until oc rollout status deployment/oauth-openshift -n openshift-authentication
+              date
               echo "Rollout completed. Authentication Operator ready to accept new users"
           imagePullPolicy: Always
           name: htpass-wait-job
