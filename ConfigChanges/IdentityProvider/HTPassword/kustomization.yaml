@@ -1,4 +1,4 @@
 resources:
-- htpasswd-secret-sealed.yaml
+- htpass-secret.yaml
 - oauth.yaml
 - clusterrolebinding.yaml

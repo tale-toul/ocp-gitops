@@ -8,7 +8,7 @@ spec:
     server: https://kubernetes.default.svc
   project: default
   source:
-    path: IdentityProvider/HTPassword
+    path: ConfigChanges/IdentityProvider/HTPassword
     repoURL: https://github.com/tale-toul/ocp-gitops/
-    targetRevision: HEAD
+    targetRevision: arcentric
 
