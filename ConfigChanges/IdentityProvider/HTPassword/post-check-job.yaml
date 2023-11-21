@@ -19,11 +19,11 @@ spec:
             - -c
             - |
               date
-              echo "Wait for Authentication cluster operator to detect the change"
+              echo "Wait for Authentication Cluster Operator to detect the change"
               for x in 1 2 3 
               do
                 oc wait co/authentication --for condition=Progressing --timeout 20s
-                echo -e "\n...still waiting for Authentication cluster operator to detect the change."
+                echo -e "\n...Still waiting for Authentication Cluster Operator to detect the change."
                 date
                 sleep $SLEEP
                 if [ $x -eq 3 ]

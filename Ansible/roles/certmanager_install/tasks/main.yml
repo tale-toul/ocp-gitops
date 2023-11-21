@@ -1,0 +1,7 @@
+---
+# tasks file for certmanager_install
+- name: Add cert manager Application
+  k8s:
+    api_key: "{{ token }}"
+    definition: "{{ lookup('file', 'App-cert-manager.yaml') }}" 
+    state: "present"

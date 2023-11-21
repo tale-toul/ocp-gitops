@@ -2,5 +2,6 @@
 #Configuration items - START
 argocd_install: true
 htpass_idm: true
+certmanager_install: true 
 #Configuration items - END
 ...

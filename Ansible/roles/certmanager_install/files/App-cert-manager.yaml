@@ -1,13 +1,13 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: htpass-idp
+  name: cert-manager
   namespace: openshift-gitops
 spec:
   destination:
     server: https://kubernetes.default.svc
   project: default
   source:
-    path: ConfigChanges/IdentityProvider/HTPassword
+    path: ConfigChanges/Operators/CertManager
     repoURL: https://github.com/tale-toul/ocp-gitops/
     targetRevision: arcentric

@@ -11,13 +11,6 @@
       include_vars: 
         file: group_vars/user_credentials.vault
       no_log: true
-        #    - name: Log into OCP to obtain access token
-        #      k8s_auth:
-        #        host: "{{ api_entrypoint }}"
-        #        validate_certs: false
-        #        username: "{{ ocp_user }}"
-        #        password: "{{ ocp_pass }}"
-        #      register: _auth_result
     - name: Install GitOps operator
       include_role:
         name: argocd_install
@@ -26,4 +19,8 @@
       include_role:
         name: htpass_idm
       when: htpass_idm | bool
+    - name: Install Cert Manager
+      include_role:
+        name: certmanager_install
+      when: certmanager_install | bool
 ...
