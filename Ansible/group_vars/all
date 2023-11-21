@@ -1,4 +1,6 @@
 ---
-#Configuration items
-argocd_install: false
+#Configuration items - START
+argocd_install: true
+htpass_idm: true
+#Configuration items - END
 ...
