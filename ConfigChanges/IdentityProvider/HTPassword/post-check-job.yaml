@@ -20,14 +20,19 @@ spec:
             - |
               date
               echo "Wait for Authentication cluster operator to detect the change"
-              until oc wait co/authentication --for condition=Progressing --timeout 60s
+              for x in 1 2 3 
               do
+                oc wait co/authentication --for condition=Progressing --timeout 20s
                 date
-                echo -n "...still waiting for Authentication cluster operator to detect the change.  "
+                echo "...still waiting for Authentication cluster operator to detect the change."
                 sleep $SLEEP
+		if [ $x -eq 3 ]
+                then
+                  date
+                  echo "Change NOT detected by the Authentication Operator. This is normal if only the secret was updated"
+                fi
               done
               date
-              echo "Change detected by authentication cluster operator"
               echo "Wait for Authentication deployment to complete"
               until oc rollout status deployment/oauth-openshift -n openshift-authentication
               date
