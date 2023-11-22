@@ -7,7 +7,7 @@ metadata:
   namespace: bgd
 spec:
   rules:
-  - host: bgd.apps.cluster-5cvx2.5cvx2.sandbox2901.opentlc.com
+  - host: bgd.apps.{{  }} #<-- Patch with correct route domain
     http:
       paths:
       - backend:
@@ -19,5 +19,5 @@ spec:
         pathType: Prefix
   tls:
   - hosts:
-    - bgd.apps.cluster-5cvx2.5cvx2.sandbox2901.opentlc.com
+    - bgd.apps.{{ }}  #<-- Patch with correct route domain
     secretName: bgd-ingress-cert

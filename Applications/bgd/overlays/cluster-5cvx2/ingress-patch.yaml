@@ -1,0 +1,10 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: bgd
+spec:
+  rules:
+  - host: bgd.apps.cluster-5cvx2.5cvx2.sandbox2901.opentlc.com
+  tls:
+  - hosts:
+    - bgd.apps.cluster-5cvx2.5cvx2.sandbox2901.opentlc.com
