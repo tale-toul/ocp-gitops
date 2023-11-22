@@ -4,5 +4,6 @@ argocd_install: true
 htpass_idm: true
 certmanager_install: true 
 bootstrap_cert_manager: true 
+bgd_app: true
 #Configuration items - END
 ...

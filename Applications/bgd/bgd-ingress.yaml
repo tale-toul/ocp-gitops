@@ -1,0 +1,23 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    cert-manager.io/cluster-issuer: my-ca-issuer
+  name: bgd
+  namespace: bgd
+spec:
+  rules:
+  - host: bgd.apps.cluster-5cvx2.5cvx2.sandbox2901.opentlc.com
+    http:
+      paths:
+      - backend:
+          service:
+            name: bgd
+            port:
+              number: 8080
+        path: /
+        pathType: Prefix
+  tls:
+  - hosts:
+    - bgd.apps.cluster-5cvx2.5cvx2.sandbox2901.opentlc.com
+    secretName: bgd-ingress-cert

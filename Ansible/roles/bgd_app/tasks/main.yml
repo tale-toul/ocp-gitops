@@ -1,0 +1,7 @@
+---
+# tasks file for bgd_app
+- name: Deploy the bgd application
+  k8s:
+    api_key: "{{ token }}"
+    definition: "{{ lookup('file', 'App-bgd_app.yaml') }}" 
+    state: "present"

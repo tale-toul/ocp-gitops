@@ -27,4 +27,8 @@
       include_role:
         name: bootstrap_cert_manager
       when: bootstrap_cert_manager | bool
+    - name: Deploy bgd application
+      include_role:
+        name: bgd_app
+      when: bgd_app | bool
 ...
