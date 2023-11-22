@@ -1,0 +1,64 @@
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "-10" 
+    argocd.argoproj.io/hook: Sync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+  name: check-dependencies
+  namespace: openshift-gitops
+spec:
+  backoffLimit: 5
+  activeDeadlineSeconds: 300
+  template:
+    spec:
+      containers:
+        - image: quay.io/openshift/origin-cli:4.11
+          command:
+            - /bin/bash
+            - -c
+            - |
+              date
+              echo "Checking ArgoCd application dependencies: $DEPENDENCIES"
+              for APP in $DEPENDENCIES
+              do
+                echo "Waiting for dependency $APP"
+                DEP_TEST="fail"
+                for x in {1..3}
+                do
+                  APP_HEALTH=$(oc get application $APP -n openshift-gitops -o jsonpath='{.status.health.status}')
+                  APP_SYNC=$(oc get application $APP -n openshift-gitops -o jsonpath='{.status.sync.status}')
+                  date
+                  if [ $APP_HEALTH = "Healthy" -a $APP_SYNC = "Synced" ]
+                  then
+                    echo -n "Dependency $APP passed.  Health STATUS: $APP_HEALTH -- Sync STATUS: $APP_SYNC"
+                    DEP_TEST="success"
+                    break
+                  else
+                    echo -n "Dependency $APP failed. "
+                    if [ $x -lt 3 ]
+                    then
+                      sleep 20
+                    fi
+                  fi
+                  echo "Health STATUS: $APP_HEALTH -- Sync STATUS: $APP_SYNC"
+                done
+                if [ $DEP_TEST = "fail" ]
+                then
+                  date
+                  echo -e "\nDependency $APP not fullfiled, exiting"
+                  exit 1
+                fi
+              done
+          imagePullPolicy: Always
+          name: htpass-wait-job
+          env:
+          - name: SLEEP
+            value: "5"
+          - name: DEPENDENCIES
+            value: "cert-manager-install"
+      dnsPolicy: ClusterFirst
+      restartPolicy: OnFailure
+      serviceAccountName: openshift-gitops-argocd-application-controller
+      terminationGracePeriodSeconds: 30

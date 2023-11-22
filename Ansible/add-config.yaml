@@ -23,4 +23,8 @@
       include_role:
         name: certmanager_install
       when: certmanager_install | bool
+    - name: Bootstrap cert manager CA
+      include_role:
+        name: bootstrap_cert_manager
+      when: bootstrap_cert_manager | bool
 ...
