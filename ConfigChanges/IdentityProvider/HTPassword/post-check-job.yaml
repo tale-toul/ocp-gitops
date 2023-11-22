@@ -20,16 +20,20 @@ spec:
             - |
               date
               echo "Wait for Authentication Cluster Operator to detect the change"
-              for x in 1 2 3 
+              for x in {1..$LOOPCOUNT}
               do
-                oc wait co/authentication --for condition=Progressing --timeout 20s
-                echo -e "\n...Still waiting for Authentication Cluster Operator to detect the change."
-                date
-                sleep $SLEEP
-                if [ $x -eq 3 ]
+                if oc wait co/authentication --for condition=Progressing --timeout 20s
                 then
-                  echo -e "\nChange NOT detected by the Authentication Operator. This is normal if only the secret was updated"
+                  break
+                else
+                  echo -e "\n...Still waiting for Authentication Cluster Operator to detect the change."
                   date
+                  sleep $SLEEP
+                  if [ $x -eq $LOOPCOUNT ]
+                  then
+                    echo -e "\nChange NOT detected by the Authentication Operator. This is normal if only the secret was updated"
+                    date
+                  fi
                 fi
               done
               date
@@ -42,6 +46,8 @@ spec:
           env:
           - name: SLEEP
             value: "5"
+          - name: LOOPCOUNT
+            value: 3
       dnsPolicy: ClusterFirst
       restartPolicy: OnFailure
       serviceAccountName: openshift-gitops-argocd-application-controller

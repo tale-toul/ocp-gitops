@@ -25,7 +25,7 @@ spec:
               do
                 echo "Waiting for dependency $APP"
                 DEP_TEST="fail"
-                for x in {1..3}
+                for x in {1..$LOOPCOUNT}
                 do
                   APP_HEALTH=$(oc get application $APP -n openshift-gitops -o jsonpath='{.status.health.status}')
                   APP_SYNC=$(oc get application $APP -n openshift-gitops -o jsonpath='{.status.sync.status}')
@@ -37,7 +37,7 @@ spec:
                     break
                   else
                     echo -n "Dependency $APP failed. "
-                    if [ $x -lt 3 ]
+                    if [ $x -lt $LOOPCOUNT ]
                     then
                       sleep 20
                     fi
@@ -58,6 +58,8 @@ spec:
             value: "5"
           - name: DEPENDENCIES
             value: "cert-manager-install"
+          - name: LOOPCOUNT
+            value: 4
       dnsPolicy: ClusterFirst
       restartPolicy: OnFailure
       serviceAccountName: openshift-gitops-argocd-application-controller
