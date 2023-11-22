@@ -1,5 +1,100 @@
 # GITOPS CONFIGURATION FOR OPENSHIFT 4 CLUSTERS
 
+## Setting up the demo
+
+This instructions have been tested from a RHEL 8.7 host against an OCP 4.14 cluter.
+
+Access as cluster admin to an Openshift 4 cluster is required.
+
+Ansible is required.  The following command install ansible and the required associated packages:
+```
+$ sudo dnf install ansible
+```
+In RHEL 8.7 system that has been used, ansible uses python 3.9 but most of the python packages are for version 3.6
+```
+$ ansible --version
+ansible [core 2.13.3]
+...
+  python version = 3.9.13 (main, Nov  9 2022, 13:16:24) [GCC 8.5.0 20210514 (Red Hat 8.5.0-15)]
+
+$ ls -F /usr/lib/python3.6/site-packages/
+authselect/                      file_magic-0.3.0-py3.6.egg-info/  jsonschema/                        pycparser-2.14-py3.6.egg-info/             sepolicy/
+babel/                           idna/                             jsonschema-2.6.0-py3.6.egg-info/   pyinotify-0.9.6-py3.6.egg-info/            sepolicy-1.1-py3.6.egg-info
+Babel-2.5.1-py3.6.egg-info/      idna-2.5-py3.6.egg-info/          jwt/                               pyinotify.py                               serial/
+...
+```
+The latest version of the code is in the git branch **arcentric**:
+```
+$ git clone https://github.com/tale-toul/ocp-gitops.git 
+$ git checkout arcentric
+$ git pull origin arcentric
+```
+
+The playbook needs to know the API entrypoint of the Openshift cluter.  Assign the value to the ansible variable **api_entrypoint**.  The value can be obtained running the following command from an already logged in session in the OCP cluster: 
+```
+$ oc whoami --show-server
+https://master.ocpext.example.com:443
+```
+
+In order to stablish secure connections with the API, the k8s modules need to have the CA certificates used by the cluster.  Obtain the CA bundle running the following command:
+```
+$ oc rsh -n openshift-authentication <oauth-openshift-pod> cat /run/secrets/kubernetes.io/serviceaccount/ca.crt > api-ca.crt
+```
+   Then define the variable **api_ca_cert** with the absolute or relative path to the file.
+
+The playbook requires cluster admin credentials to make changes to the cluster.  The credentials are expected to be found in the file **Ansible/group_vars/user_credentials.vault**.  
+The credentials must be in the form of a authentication token, like in the following example
+```
+token: eyJhbGciOiJSUzI1NiIsImtpZCI6ImVVMFJ6Mjd6c3BHcmZ4a29sRURGekdQZ2dUSDNiRkItZjhLRE1vZzFFcHcifQ.eyJpc3M....
+```
+The above file should be encrypted with ansible-vault:
+```
+$ cd Ansible
+$ echo "eyJhbGciOiJSUzI1NiIsImtpZCI6ImVVMFJ6Mjd6c....." > group_vars/user_credentials.vault
+$ pwmake 128 > vault-id
+$ ansible-vault encrypt --vault-id vault-id group_vars/user_credentials.vault
+```
+    The vault password or vault id must be passed to the playbook.
+
+Review the file **Ansible/group_vars/all** and enable/disable the changes you want applied to the cluster.  
+
+If you enable the deployment of the bgd application, go to the file **Applications/bgd/overlays/cluster-5cvx2/ingress-patch.yaml** and adapt the two values in that patch to reflect the DNS domain of your cluster.  It is recommended to create a new overlay directory for the cluster:
+```
+$ mkdir Applications/bgd/overlays/cluster-lh48t
+$ cd Applications/bgd/overlays/cluster-lh48t                                                                                                                    
+$ cp ../cluster-5cvx2/* .
+$ oc whoami --show-console                                                                                                                                   
+https://console-openshift-console.apps.cluster-lh48t.lh48t.sandbox180.opentlc.com
+
+- op: replace
+  path: /spec/rules/0/host
+  value: bgd.apps.cluster-lh48t.lh48t.sandbox180.opentlc.com
+- op: replace
+  path: /spec/tls/0/hosts/0
+  value: bgd.apps.cluster-lh48t.lh48t.sandbox180.opentlc.com
+```
+If you don't change those values, the application will be deployed nontheless.  
+
+If you change the values, you need to modify the directory reference in the file **Ansible/roles/bgd_app/files/App-bgd_app.yaml** 
+```
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+...
+    path: Applications/bgd/overlays/cluster-lh48t/
+    repoURL: https://github.com/tale-toul/ocp-gitops/
+    targetRevision: arcentric
+```
+Push the changes to the git repository, for that you will have to fork the repository:
+```
+
+```
+
+
+Run the ansible playbook with a command like:
+```
+$ ansible-playbook -vvv add-config.yaml -e api_entrypoint="https://api.cluster-5vcx2.5vcx2.sandbox2901.opentlc.com:6443" -e api_ca_cert=api-ca.crt --vault-id vault-id
+```
+
 ## Installing the Red Hat Openshift GitOps Operator
 
 In the spirit of gitops best practices, this [installation instructions](https://docs.openshift.com/container-platform/4.7/operators/user/olm-installing-operators-in-namespace.html#olm-installing-operator-from-operatorhub-using-cli_olm-installing-operators-in-namespace) use the CLI instead of the web console.
@@ -35,14 +130,6 @@ The user to access is __admin__, the password can be obtained from a secret in t
 # admin.password
 zAx8oVwakQsq5JitMFIp53ecGd14rSlv
 ```
-
-## Openshift cluster configuration
-
-The namespaces directory contains additional directories for the creation of projects (namespaces) in the Openshift cluster.  Each directory contains a yaml definition for the namespace object, and a resources subdirectory for the resources to be created in it.  The resources subdirectory exists to make sure that ArgoCD creates the namespace before attempting to create its resources. 
-
-## ArgoCD component manifests
-
-The directory CRDs contains yaml definitions for the _applications_ created inside ArgoCD.
 
 ## Ansible automation
 
