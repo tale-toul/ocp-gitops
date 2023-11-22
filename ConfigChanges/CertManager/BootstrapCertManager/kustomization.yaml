@@ -1,5 +1,5 @@
 resources:
- - _10-dependencies.yaml
+# - _10-dependencies.yaml
  - 00-namespaces.yaml
  - 00-selfsing-clusterissuer.yaml
  - 10-selfsing-CA-cert.yaml
