@@ -1,16 +1,19 @@
-# GITOPS CONFIGURATION FOR OPENSHIFT 4 CLUSTERS
+# GITOPS CONFIGURATION FOR OPENSHIFT 4
 
-## Setting up the demo
+## Running the demo
 
-This instructions have been tested from a RHEL 8.7 host against an OCP 4.14 cluter.
+### Setting up the ansible manager host
 
-Access as cluster admin to an Openshift 4 cluster is required.
+This instructions have been tested on RHEL 8.7 and on Fedora 38 against an OCP 4.14 cluter.
 
-Ansible is required.  The following command install ansible and the required associated packages:
+A cluster admin user to access the Openshift 4 cluster is needed.
+
+Ansible is required.  The following command installs ansible and the required associated packages:
 ```
 $ sudo dnf install ansible
 ```
-In RHEL 8.7 system that has been used, ansible uses python 3.9 but most of the python packages are for version 3.6
+In RHEL 8.7, ansible uses python 3.9 but most of the python packages are for version 3.6.
+This does not happen in other operating systems, so you probably don't need to apply this changes.
 ```
 $ ansible --version
 ansible [core 2.13.3]
@@ -22,6 +25,17 @@ authselect/                      file_magic-0.3.0-py3.6.egg-info/  jsonschema/  
 babel/                           idna/                             jsonschema-2.6.0-py3.6.egg-info/   pyinotify-0.9.6-py3.6.egg-info/            sepolicy-1.1-py3.6.egg-info
 Babel-2.5.1-py3.6.egg-info/      idna-2.5-py3.6.egg-info/          jwt/                               pyinotify.py                               serial/
 ...
+```
+To make sure that the managed host, which is the same as the ansible manager, uses python 3.6, the **ansible_python_interpreter** is defined in the **host_vars/localhost** file:
+```
+$ python3 --version
+Python 3.6.8
+
+$ which python3
+/usr/bin/python3
+
+$ cat Ansible/host_vars/localhost 
+ansible_python_interpreter: /usr/bin/python3
 ```
 
 Install the kubernetes python library. This is needed by the k8s ansible module family:
@@ -46,7 +60,7 @@ In order to stablish secure connections with the API, the k8s modules need to ha
 ```
 $ oc rsh -n openshift-authentication <oauth-openshift-pod> cat /run/secrets/kubernetes.io/serviceaccount/ca.crt > api-ca.crt
 ```
-   Then define the variable **api_ca_cert** with the absolute or relative path to the file.
+Then define the variable **api_ca_cert** with the absolute or relative path to the file.
 
 The playbook requires cluster admin credentials to make changes to the cluster.  The credentials are expected to be found in the file **Ansible/group_vars/user_credentials.vault**.  
 
@@ -61,7 +75,7 @@ $ echo "token: eyJhbGciOiJSUzI1NiIsImtpZCI6ImVVMFJ6Mjd6c....." > group_vars/user
 $ pwmake 128 > vault-id
 $ ansible-vault encrypt --vault-id vault-id group_vars/user_credentials.vault
 ```
-    The vault password or vault id must be passed to the playbook.
+The vault password or vault id must be passed to the playbook.
 
 Review the file **Ansible/group_vars/all** and enable/disable the changes you want applied to the cluster.  
 

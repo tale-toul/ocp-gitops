@@ -1,0 +1,6 @@
+- op: replace
+  path: /spec/rules/0/host
+  value: bgd.apps.cluster-h2qfg.h2qfg.sandbox134.opentlc.com
+- op: replace
+  path: /spec/tls/0/hosts/0
+  value: bgd.apps.cluster-h2qfg.h2qfg.sandbox134.opentlc.com

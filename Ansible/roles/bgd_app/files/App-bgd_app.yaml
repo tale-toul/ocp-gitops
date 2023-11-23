@@ -8,6 +8,6 @@ spec:
     server: https://kubernetes.default.svc
   project: default
   source:
-    path: Applications/bgd/overlays/cluster-lh48t/
+    path: Applications/bgd/overlays/cluster-h2qfg/
     repoURL: https://github.com/tale-toul/ocp-gitops/
     targetRevision: arcentric
