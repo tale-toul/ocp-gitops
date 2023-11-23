@@ -24,7 +24,7 @@ spec:
               do
                 echo "Waiting for dependency $APP"
                 DEP_TEST="fail"
-                for x in {1..$LOOPCOUNT}
+                for (( x=1; x<=$LOOPCOUNT; x++ ))
                 do
                   APP_HEALTH=$(oc get application $APP -n openshift-gitops -o jsonpath='{.status.health.status}')
                   APP_SYNC=$(oc get application $APP -n openshift-gitops -o jsonpath='{.status.sync.status}')

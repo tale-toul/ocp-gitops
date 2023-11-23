@@ -20,7 +20,7 @@ spec:
             - |
               date
               echo "Wait for Authentication Cluster Operator to detect the change"
-              for x in {1..$LOOPCOUNT}
+              for (( x=1; x<=$LOOPCOUNT; x++ ))
               do
                 if oc wait co/authentication --for condition=Progressing --timeout 20s
                 then
