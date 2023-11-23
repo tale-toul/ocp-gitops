@@ -23,6 +23,12 @@ babel/                           idna/                             jsonschema-2.
 Babel-2.5.1-py3.6.egg-info/      idna-2.5-py3.6.egg-info/          jwt/                               pyinotify.py                               serial/
 ...
 ```
+
+Install the kubernetes python library. This is needed by the k8s ansible module family:
+```
+$ sudo dnf install python3-kubernetes
+```
+
 The latest version of the code is in the git branch **arcentric**:
 ```
 $ git clone https://github.com/tale-toul/ocp-gitops.git 
@@ -33,7 +39,7 @@ $ git pull origin arcentric
 The playbook needs to know the API entrypoint of the Openshift cluter.  Assign the value to the ansible variable **api_entrypoint**.  The value can be obtained running the following command from an already logged in session in the OCP cluster: 
 ```
 $ oc whoami --show-server
-https://master.ocpext.example.com:443
+https://api.cluster-lh48t.lh48t.sandbox180.opentlc.com:6443
 ```
 
 In order to stablish secure connections with the API, the k8s modules need to have the CA certificates used by the cluster.  Obtain the CA bundle running the following command:
@@ -43,6 +49,7 @@ $ oc rsh -n openshift-authentication <oauth-openshift-pod> cat /run/secrets/kube
    Then define the variable **api_ca_cert** with the absolute or relative path to the file.
 
 The playbook requires cluster admin credentials to make changes to the cluster.  The credentials are expected to be found in the file **Ansible/group_vars/user_credentials.vault**.  
+
 The credentials must be in the form of a authentication token, like in the following example
 ```
 token: eyJhbGciOiJSUzI1NiIsImtpZCI6ImVVMFJ6Mjd6c3BHcmZ4a29sRURGekdQZ2dUSDNiRkItZjhLRE1vZzFFcHcifQ.eyJpc3M....
@@ -50,8 +57,7 @@ token: eyJhbGciOiJSUzI1NiIsImtpZCI6ImVVMFJ6Mjd6c3BHcmZ4a29sRURGekdQZ2dUSDNiRkItZ
 The above file should be encrypted with ansible-vault:
 ```
 $ cd Ansible
-$ echo "eyJhbGciOiJSUzI1NiIsImtpZCI6ImVVMFJ6Mjd6c....." > group_vars/user_credentials.vault
-$ pwmake 128 > vault-id
+$ echo "token: eyJhbGciOiJSUzI1NiIsImtpZCI6ImVVMFJ6Mjd6c....." > group_vars/user_credentials.vault
 $ ansible-vault encrypt --vault-id vault-id group_vars/user_credentials.vault
 ```
     The vault password or vault id must be passed to the playbook.
@@ -86,13 +92,16 @@ kind: Application
 ```
 Push the changes to the git repository, for that you will have to fork the repository:
 ```
-
+$ git add Ansible/roles/bgd_app/files/App-bgd_app.yaml
+$ git add Applications/bgd/overlays/cluster-lh48t/
+$ git commit -sv
+$ git push origin arcentric
 ```
-
 
 Run the ansible playbook with a command like:
 ```
-$ ansible-playbook -vvv add-config.yaml -e api_entrypoint="https://api.cluster-5vcx2.5vcx2.sandbox2901.opentlc.com:6443" -e api_ca_cert=api-ca.crt --vault-id vault-id
+$ cd Ansible
+$ ansible-playbook -vvv add-config.yaml -e api_entrypoint="https://api.cluster-lh48t.lh48t.sandbox180.opentlc.com:6443" -e api_ca_cert=api-ca.crt --vault-id vault-id
 ```
 
 ## Installing the Red Hat Openshift GitOps Operator
