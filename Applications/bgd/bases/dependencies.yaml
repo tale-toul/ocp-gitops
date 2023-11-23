@@ -6,7 +6,7 @@ metadata:
     argocd.argoproj.io/hook: PreSync
     argocd.argoproj.io/hook-delete-policy: HookSucceeded
   name: check-dependencies
-  namespace: bgd
+  namespace: openshift-gitops
 spec:
   backoffLimit: 5
   activeDeadlineSeconds: 300

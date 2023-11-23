@@ -7,7 +7,7 @@ metadata:
     argocd.argoproj.io/hook: Sync
     argocd.argoproj.io/hook-delete-policy: HookSucceeded
   name: check-dependencies
-  namespace: sandbox
+  namespace: openshift-gitops
 spec:
   backoffLimit: 5
   activeDeadlineSeconds: 300
