@@ -47,7 +47,7 @@ spec:
           - name: SLEEP
             value: "5"
           - name: LOOPCOUNT
-            value: 3
+            value: "3"
       dnsPolicy: ClusterFirst
       restartPolicy: OnFailure
       serviceAccountName: openshift-gitops-argocd-application-controller
