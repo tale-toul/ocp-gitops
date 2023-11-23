@@ -4,4 +4,4 @@ resources:
   - 00-namespace.yaml
   - 00-operator-group.yaml
   - 00-subscription.yaml
-
+  - 10-post-check.yaml

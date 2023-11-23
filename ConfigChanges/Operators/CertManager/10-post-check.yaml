@@ -1,0 +1,53 @@
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+  name: post-check-cert-manager
+  namespace: openshift-gitops
+spec:
+  backoffLimit: 5
+  activeDeadlineSeconds: 300
+  template:
+    spec:
+      containers:
+        - image: quay.io/openshift/origin-cli:4.11
+          command:
+            - /bin/bash
+            - -c
+            - |
+              date
+              echo "Waiting for Cert Manager Operator to fully deploy"
+              CSV=$(oc get csv -n cert-manager-operator -l operators.coreos.com/openshift-cert-manager-operator.cert-manager-operator="" -o name)
+              for (( x=1; x<=$LOOPCOUNT; x++ ))
+              do
+                if oc wait $CSV --for jsonpath='{.status.phase}'=Succeeded --timeout=20s
+                then
+                  date
+                  echo -e "\nInstallation completed"
+                  break
+                else
+                  date
+                  echo -e "\n...Still waiting for Cert Manager Operator to install"
+                  sleep $SLEEP
+                  if [ $x -eq $LOOPCOUNT ]
+                  then
+                    date
+                    echo -e "\nCert Manager Operator not installed, exiting"
+                    exit 1
+                  fi
+                fi
+              done
+          imagePullPolicy: Always
+          name: htpass-wait-job
+          env:
+          - name: SLEEP
+            value: "5"
+          - name: LOOPCOUNT
+            value: "4"
+      dnsPolicy: ClusterFirst
+      restartPolicy: OnFailure
+      serviceAccountName: openshift-gitops-argocd-application-controller
+      terminationGracePeriodSeconds: 30

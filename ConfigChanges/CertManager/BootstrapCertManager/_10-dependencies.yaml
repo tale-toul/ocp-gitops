@@ -6,7 +6,7 @@ metadata:
     argocd.argoproj.io/sync-wave: "-10" 
     argocd.argoproj.io/hook: Sync
     argocd.argoproj.io/hook-delete-policy: HookSucceeded
-  name: check-dependencies
+  name: check-dependencies-cert-bootstrap
   namespace: openshift-gitops
 spec:
   backoffLimit: 5
