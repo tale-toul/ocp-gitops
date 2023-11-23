@@ -59,7 +59,7 @@ spec:
           - name: DEPENDENCIES
             value: "cert-manager-install"
           - name: LOOPCOUNT
-            value: 4
+            value: "4"
       dnsPolicy: ClusterFirst
       restartPolicy: OnFailure
       serviceAccountName: openshift-gitops-argocd-application-controller

@@ -58,6 +58,7 @@ The above file should be encrypted with ansible-vault:
 ```
 $ cd Ansible
 $ echo "token: eyJhbGciOiJSUzI1NiIsImtpZCI6ImVVMFJ6Mjd6c....." > group_vars/user_credentials.vault
+$ pwmake 128 > vault-id
 $ ansible-vault encrypt --vault-id vault-id group_vars/user_credentials.vault
 ```
     The vault password or vault id must be passed to the playbook.
@@ -103,6 +104,13 @@ Run the ansible playbook with a command like:
 $ cd Ansible
 $ ansible-playbook -vvv add-config.yaml -e api_entrypoint="https://api.cluster-lh48t.lh48t.sandbox180.opentlc.com:6443" -e api_ca_cert=api-ca.crt --vault-id vault-id
 ```
+
+After the playbook completes successfully, access the ArgoCD web interface, the link is found in the rubik's cube menu at the top right, in the OCP web interface.  Access as the user **admin**, the password can be extracted from the following secret:
+
+```
+$ oc extract secret/openshift-gitops-cluster -n openshift-gitops --to -
+```
+
 
 ## Installing the Red Hat Openshift GitOps Operator
 
