@@ -116,7 +116,7 @@ $ git push origin arcentric
 Run the ansible playbook with a command like:
 ```
 $ cd Ansible
-$ ansible-playbook -vvv add-config.yaml -e api_entrypoint="https://api.cluster-lh48t.lh48t.sandbox180.opentlc.com:6443" -e api_ca_cert=api-ca.crt --vault-id vault-id
+$ ansible-playbook -vvv add-config.yaml -e api_entrypoint="https://api.cluster-lh48t.lh48t.sandbox180.opentlc.com:6443" -e api_ca_cert=api-ca.crt --vault-id vault-id | tee ansible.log
 ```
 
 After the playbook completes successfully, access the ArgoCD web interface, the link is found in the rubik's cube menu at the top right, in the OCP web interface.  Access as the user **admin**, the password can be extracted from the following secret:

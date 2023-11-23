@@ -23,7 +23,7 @@ spec:
               CSV=$(oc get csv -n cert-manager-operator -l operators.coreos.com/openshift-cert-manager-operator.cert-manager-operator="" -o name)
               for (( x=1; x<=$LOOPCOUNT; x++ ))
               do
-                if oc wait $CSV --for jsonpath='{.status.phase}'=Succeeded --timeout=20s
+                if oc wait $CSV --for jsonpath='{.status.phase}'=Succeeded --timeout=20s -n cert-manager-operator
                 then
                   date
                   echo -e "\nInstallation completed"
